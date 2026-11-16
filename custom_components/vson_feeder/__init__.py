@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register custom domain services if not already registered
-    if not hass.services.has(DOMAIN, SERVICE_FEED):
+    if not hass.services.has_service(DOMAIN, SERVICE_FEED):
         async def handle_feed(call: ServiceCall) -> None:
             """Handle manual feed service call."""
             target_mac = call.data[CONF_MAC].strip().upper()
