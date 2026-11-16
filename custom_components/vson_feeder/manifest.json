@@ -1,0 +1,9 @@
+{
+  "domain": "vson_feeder",
+  "name": "威盛智能喂鱼器 (VSON Fish Feeder)",
+  "codeowners": ["@chenpinetree"],
+  "config_flow": true,
+  "documentation": "https://github.com/chenpinetree/ha-vson-feeder",
+  "iot_class": "cloud_polling",
+  "version": "1.0.0"
+}

@@ -1,0 +1,71 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "添加威盛智能喂鱼器",
+        "description": "请输入喂鱼器的 MAC 地址进行绑定与控制。",
+        "data": {
+          "mac": "MAC 地址 (如 86:15:02:FB:BB:A3)",
+          "name": "设备名称"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "无法连接到设备，请确认 MAC 地址或检查网络",
+      "invalid_mac": "MAC 地址格式无效"
+    },
+    "abort": {
+      "already_configured": "该设备已经添加配置过了"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "电量"
+      },
+      "water_cleanliness": {
+        "name": "水质洁净度"
+      },
+      "last_water_change": {
+        "name": "上次换水时间"
+      },
+      "last_feed_left": {
+        "name": "左仓上次投喂时间"
+      },
+      "last_feed_right": {
+        "name": "右仓上次投喂时间"
+      },
+      "water_change_period": {
+        "name": "换水周期"
+      }
+    },
+    "binary_sensor": {
+      "connectivity": {
+        "name": "在线状态"
+      },
+      "is_charging": {
+        "name": "充电状态"
+      },
+      "power_plugged": {
+        "name": "外部电源连接"
+      },
+      "food_shortage": {
+        "name": "缺粮告警"
+      },
+      "water_change_due": {
+        "name": "换水到期提醒"
+      }
+    },
+    "button": {
+      "feed_left": {
+        "name": "立即投喂 (左仓)"
+      },
+      "feed_right": {
+        "name": "立即投喂 (右仓)"
+      },
+      "reset_water_change": {
+        "name": "重置换水计时"
+      }
+    }
+  }
+}

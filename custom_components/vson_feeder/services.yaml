@@ -1,0 +1,36 @@
+feed:
+  name: 投喂
+  description: 触发喂鱼器投喂指令。
+  fields:
+    mac:
+      name: MAC 地址
+      description: 喂鱼器的 MAC 地址 (例如 86:15:02:FB:BB:A3)。
+      required: true
+      example: "86:15:02:FB:BB:A3"
+      selector:
+        text:
+    hopper:
+      name: 料仓
+      description: 选择投喂的料仓 (left 为左仓，right 为右仓)。
+      required: false
+      default: left
+      example: left
+      selector:
+        select:
+          options:
+            - label: 左仓
+              value: left
+            - label: 右仓
+              value: right
+
+reset_water_change:
+  name: 重置换水计时
+  description: 重置喂鱼器的换水提醒周期与计时。
+  fields:
+    mac:
+      name: MAC 地址
+      description: 喂鱼器的 MAC 地址 (例如 86:15:02:FB:BB:A3)。
+      required: true
+      example: "86:15:02:FB:BB:A3"
+      selector:
+        text:
