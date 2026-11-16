@@ -22,10 +22,12 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.SWITCH,
 ]
 
 SERVICE_FEED = "feed"
 SERVICE_RESET_WATER = "reset_water_change"
+SERVICE_SET_PUMP = "set_pump"
 
 FEED_SERVICE_SCHEMA = vol.Schema(
     {
@@ -37,6 +39,13 @@ FEED_SERVICE_SCHEMA = vol.Schema(
 RESET_WATER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_MAC): cv.string,
+    }
+)
+
+SET_PUMP_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_MAC): cv.string,
+        vol.Required("state"): cv.boolean,
     }
 )
 
@@ -62,7 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hopper_raw = str(call.data.get("hopper", "left")).lower()
             hopper_type = 1 if hopper_raw in ("right", "1") else 0
 
-            # Find matching coordinator
             coord: VsonFeederCoordinator | None = None
             for c in hass.data.get(DOMAIN, {}).values():
                 if isinstance(c, VsonFeederCoordinator) and c.mac == target_mac:
@@ -92,8 +100,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             else:
                 _LOGGER.warning("Coordinator not found for MAC %s to reset water change", target_mac)
 
+        async def handle_set_pump(call: ServiceCall) -> None:
+            """Handle pump control service call."""
+            target_mac = call.data[CONF_MAC].strip().upper()
+            state = 1 if call.data.get("state") else 0
+            coord: VsonFeederCoordinator | None = None
+            for c in hass.data.get(DOMAIN, {}).values():
+                if isinstance(c, VsonFeederCoordinator) and c.mac == target_mac:
+                    coord = c
+                    break
+
+            if coord:
+                success = await coord.api.async_set_pump(target_mac, state)
+                if success:
+                    await coord.async_request_refresh()
+            else:
+                _LOGGER.warning("Coordinator not found for MAC %s to set pump", target_mac)
+
         hass.services.async_register(DOMAIN, SERVICE_FEED, handle_feed, schema=FEED_SERVICE_SCHEMA)
         hass.services.async_register(DOMAIN, SERVICE_RESET_WATER, handle_reset_water, schema=RESET_WATER_SCHEMA)
+        hass.services.async_register(DOMAIN, SERVICE_SET_PUMP, handle_set_pump, schema=SET_PUMP_SCHEMA)
 
     return True
 

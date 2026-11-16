@@ -2,13 +2,21 @@
 
 DOMAIN = "vson_feeder"
 CONF_MAC = "mac"
-DEFAULT_NAME = "威盛智能喂鱼器"
+DEFAULT_NAME = "智能喂鱼器"
 DEFAULT_SCAN_INTERVAL = 30  # seconds
 
 API_BASE_URL = "https://apis.myvsoncloud.com:16082"
-ENDPOINT_QUERY_HOMEPAGE = "/vc-air-ws-1.0.2/api/air/queryBlywHomepage"
-ENDPOINT_UPDATE_FEED = "/vc-air-ws-1.0.2/api/air/updateBlywFeed"
-ENDPOINT_RESET_WATER = "/vc-air-ws-1.0.2/api/air/updateBlywReset"
+
+# Endpoints for WP8615 (dual hopper)
+ENDPOINT_QUERY_BLY_HOMEPAGE = "/vc-air-ws-1.0.2/api/air/queryBlywHomepage"
+ENDPOINT_UPDATE_BLY_FEED = "/vc-air-ws-1.0.2/api/air/updateBlywFeed"
+ENDPOINT_UPDATE_BLY_RESET = "/vc-air-ws-1.0.2/api/air/updateBlywReset"
+
+# Endpoints for WP8621 / WP8621N (with pump & single feed)
+ENDPOINT_QUERY_BLE_HOMEPAGE = "/vc-air-ws-1.0.2/api/air/queryBleyHomepage"
+ENDPOINT_UPDATE_BLE_FEED = "/vc-air-ws-1.0.2/api/air/updateBleyFeed"
+ENDPOINT_UPDATE_BLE_RESET = "/vc-air-ws-1.0.2/api/air/updateBleyReset"
+ENDPOINT_UPDATE_BLE_PUMP = "/vc-air-ws-1.0.2/api/air/updateBleyPump"
 
 DEFAULT_HEADERS = {
     "bh": "JmnuSXWflZY=",

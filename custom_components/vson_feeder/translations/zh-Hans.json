@@ -3,9 +3,9 @@
     "step": {
       "user": {
         "title": "添加威盛智能喂鱼器",
-        "description": "请输入喂鱼器的 MAC 地址进行绑定与控制。",
+        "description": "请输入喂鱼器的 MAC 地址进行绑定与控制（支持 WP8615、WP8621/WP8621N 等系列）。",
         "data": {
-          "mac": "MAC 地址 (如 86:15:02:FB:BB:A3)",
+          "mac": "MAC 地址 (如 86:15:02:FB:BB:A3 或 86:21:02:63:B8:EF)",
           "name": "设备名称"
         }
       }
@@ -35,6 +35,9 @@
       "last_feed_right": {
         "name": "右仓上次投喂时间"
       },
+      "last_feed_time": {
+        "name": "上次投喂时间"
+      },
       "water_change_period": {
         "name": "换水周期"
       }
@@ -57,6 +60,9 @@
       }
     },
     "button": {
+      "feed": {
+        "name": "立即投喂"
+      },
       "feed_left": {
         "name": "立即投喂 (左仓)"
       },
@@ -65,6 +71,11 @@
       },
       "reset_water_change": {
         "name": "重置换水计时"
+      }
+    },
+    "switch": {
+      "pump": {
+        "name": "水泵"
       }
     }
   }

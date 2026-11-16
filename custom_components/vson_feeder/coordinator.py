@@ -45,26 +45,49 @@ class VsonFeederCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _process_data(self, raw: dict[str, Any]) -> dict[str, Any]:
         """Parse and enrich raw device state."""
-        battery_bars = int(raw.get("battery", 3))
-        # 0 bars -> 5%, 1 bar -> 33%, 2 bars -> 66%, 3 bars -> 100%
-        if battery_bars == 0:
-            battery_percent = 5
-        elif battery_bars == 1:
-            battery_percent = 33
-        elif battery_bars == 2:
-            battery_percent = 66
-        else:
-            battery_percent = 100
+        dev_type = raw.get("_device_type")
+        version = raw.get("version", "")
+        if not dev_type:
+            dev_type = "8621" if (self.mac.startswith("86:21") or "8621" in version) else "8615"
 
-        is_charging = str(raw.get("isCharging", "0")) == "1"
-        power_state = int(raw.get("powerState", 0))
+        model = "WP8621N" if dev_type == "8621" else "WP8615"
+
+        # Battery (present on WP8615)
+        battery_percent: int | None = None
+        battery_bars: int | None = None
+        if "battery" in raw:
+            battery_bars = int(raw.get("battery", 3))
+            if battery_bars == 0:
+                battery_percent = 5
+            elif battery_bars == 1:
+                battery_percent = 33
+            elif battery_bars == 2:
+                battery_percent = 66
+            else:
+                battery_percent = 100
+
+        # Charging & power (WP8615)
+        is_charging: bool | None = None
+        if "isCharging" in raw:
+            is_charging = str(raw.get("isCharging", "0")) == "1"
+
+        power_plugged: bool | None = None
+        if "powerState" in raw:
+            power_plugged = int(raw.get("powerState", 0)) == 1
+
         equipment_state = int(raw.get("equipmentState", 0))
         is_material = str(raw.get("isMaterial", "0")) == "1"
         period = int(raw.get("period", 7))
         change_water_time = raw.get("changeWaterTime")
+
+        # Feeding timestamps
         last_time_l = raw.get("lastTimeL")
         last_time_r = raw.get("lastTimeR")
-        version = raw.get("version", "WP8615_S05")
+        single_time = raw.get("time")
+
+        # Pump (WP8621)
+        has_pump = "isPump" in raw
+        is_pump = str(raw.get("isPump", "0")) == "1" if has_pump else False
 
         # Cleanliness & water change due calculation
         water_cleanliness = 100.0
@@ -87,18 +110,23 @@ class VsonFeederCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return {
             "mac": self.mac,
-            "version": version,
+            "device_type": dev_type,
+            "model": model,
+            "version": version or model,
             "is_online": equipment_state == 0,
             "battery_bars": battery_bars,
             "battery_percent": battery_percent,
             "is_charging": is_charging,
-            "power_plugged": power_state == 1,
+            "power_plugged": power_plugged,
             "is_material_shortage": is_material,
             "period_days": period,
             "change_water_time": change_water_time,
             "elapsed_water_change_days": round(elapsed_days, 1),
             "water_cleanliness": round(water_cleanliness, 1),
             "water_change_due": water_change_due,
-            "last_feed_time_left": last_time_l if last_time_l != "2000-00-00 00:00:00" else None,
-            "last_feed_time_right": last_time_r if last_time_r != "2000-00-00 00:00:00" else None,
+            "last_feed_time_left": last_time_l if last_time_l and last_time_l != "2000-00-00 00:00:00" else None,
+            "last_feed_time_right": last_time_r if last_time_r and last_time_r != "2000-00-00 00:00:00" else None,
+            "last_feed_time": single_time if single_time and single_time != "2000-00-00 00:00:00" else None,
+            "has_pump": has_pump,
+            "is_pump": is_pump,
         }

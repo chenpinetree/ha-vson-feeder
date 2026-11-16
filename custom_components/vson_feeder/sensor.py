@@ -26,14 +26,23 @@ async def async_setup_entry(
     """Set up VSON Fish Feeder sensors based on a config entry."""
     coordinator: VsonFeederCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
-        VsonFeederBatterySensor(coordinator),
+    entities: list[SensorEntity] = [
         VsonFeederWaterCleanlinessSensor(coordinator),
         VsonFeederLastWaterChangeSensor(coordinator),
-        VsonFeederLastFeedLeftSensor(coordinator),
-        VsonFeederLastFeedRightSensor(coordinator),
         VsonFeederPeriodSensor(coordinator),
     ]
+
+    # Battery sensor (for battery-powered devices like WP8615)
+    if coordinator.data.get("battery_percent") is not None:
+        entities.append(VsonFeederBatterySensor(coordinator))
+
+    # Dual hopper vs Single hopper feed timestamps
+    dev_type = coordinator.data.get("device_type", "8615")
+    if dev_type == "8615":
+        entities.append(VsonFeederLastFeedLeftSensor(coordinator))
+        entities.append(VsonFeederLastFeedRightSensor(coordinator))
+    else:
+        entities.append(VsonFeederLastFeedSingleSensor(coordinator))
 
     async_add_entities(entities)
 
@@ -49,10 +58,10 @@ class VsonFeederBaseEntity(CoordinatorEntity[VsonFeederCoordinator]):
         self._mac = coordinator.mac
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._mac)},
-            name=f"智能喂鱼器 ({self._mac[-5:]})",
+            name=f"{coordinator.data.get('model', '智能喂鱼器')} ({self._mac[-5:]})",
             manufacturer="VSON (威盛)",
-            model="WP8615",
-            sw_version=coordinator.data.get("version", "WP8615_S05"),
+            model=coordinator.data.get("model", "WP8615"),
+            sw_version=coordinator.data.get("version"),
         )
 
 
@@ -163,6 +172,24 @@ class VsonFeederLastFeedRightSensor(VsonFeederBaseEntity, SensorEntity):
     def native_value(self) -> str | None:
         """Return the last right feeding timestamp."""
         return self.coordinator.data.get("last_feed_time_right") or "暂无记录"
+
+
+class VsonFeederLastFeedSingleSensor(VsonFeederBaseEntity, SensorEntity):
+    """Single feeder last feeding time."""
+
+    _attr_translation_key = "last_feed_time"
+    _attr_name = "上次投喂时间"
+    _attr_icon = "mdi:clock-check-outline"
+
+    def __init__(self, coordinator: VsonFeederCoordinator) -> None:
+        """Initialize single feed sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{self._mac}_last_feed_time"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the last feeding timestamp."""
+        return self.coordinator.data.get("last_feed_time") or "暂无记录"
 
 
 class VsonFeederPeriodSensor(VsonFeederBaseEntity, SensorEntity):

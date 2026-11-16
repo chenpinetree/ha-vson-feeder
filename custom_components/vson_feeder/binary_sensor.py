@@ -23,13 +23,17 @@ async def async_setup_entry(
     """Set up VSON Fish Feeder binary sensors."""
     coordinator: VsonFeederCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
+    entities: list[BinarySensorEntity] = [
         VsonFeederConnectivityBinarySensor(coordinator),
-        VsonFeederChargingBinarySensor(coordinator),
-        VsonFeederPowerBinarySensor(coordinator),
         VsonFeederFoodShortageBinarySensor(coordinator),
         VsonFeederWaterChangeDueBinarySensor(coordinator),
     ]
+
+    # Charging and external power sensors (if reported by device)
+    if coordinator.data.get("is_charging") is not None:
+        entities.append(VsonFeederChargingBinarySensor(coordinator))
+    if coordinator.data.get("power_plugged") is not None:
+        entities.append(VsonFeederPowerBinarySensor(coordinator))
 
     async_add_entities(entities)
 
@@ -45,10 +49,10 @@ class VsonFeederBaseBinarySensor(CoordinatorEntity[VsonFeederCoordinator], Binar
         self._mac = coordinator.mac
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._mac)},
-            name=f"智能喂鱼器 ({self._mac[-5:]})",
+            name=f"{coordinator.data.get('model', '智能喂鱼器')} ({self._mac[-5:]})",
             manufacturer="VSON (威盛)",
-            model="WP8615",
-            sw_version=coordinator.data.get("version", "WP8615_S05"),
+            model=coordinator.data.get("model", "WP8615"),
+            sw_version=coordinator.data.get("version"),
         )
 
 

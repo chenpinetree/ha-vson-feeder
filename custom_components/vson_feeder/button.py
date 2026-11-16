@@ -24,11 +24,16 @@ async def async_setup_entry(
     """Set up VSON Fish Feeder buttons."""
     coordinator: VsonFeederCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [
-        VsonFeederFeedLeftButton(coordinator),
-        VsonFeederFeedRightButton(coordinator),
-        VsonFeederResetWaterButton(coordinator),
-    ]
+    entities: list[ButtonEntity] = []
+
+    dev_type = coordinator.data.get("device_type", "8615")
+    if dev_type == "8615":
+        entities.append(VsonFeederFeedLeftButton(coordinator))
+        entities.append(VsonFeederFeedRightButton(coordinator))
+    else:
+        entities.append(VsonFeederFeedButton(coordinator))
+
+    entities.append(VsonFeederResetWaterButton(coordinator))
 
     async_add_entities(entities)
 
@@ -44,11 +49,31 @@ class VsonFeederBaseButton(CoordinatorEntity[VsonFeederCoordinator], ButtonEntit
         self._mac = coordinator.mac
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._mac)},
-            name=f"智能喂鱼器 ({self._mac[-5:]})",
+            name=f"{coordinator.data.get('model', '智能喂鱼器')} ({self._mac[-5:]})",
             manufacturer="VSON (威盛)",
-            model="WP8615",
-            sw_version=coordinator.data.get("version", "WP8615_S05"),
+            model=coordinator.data.get("model", "WP8615"),
+            sw_version=coordinator.data.get("version"),
         )
+
+
+class VsonFeederFeedButton(VsonFeederBaseButton):
+    """Button to trigger manual feed for single hopper feeder."""
+
+    _attr_translation_key = "feed"
+    _attr_name = "立即投喂"
+    _attr_icon = "mdi:fishbowl"
+
+    def __init__(self, coordinator: VsonFeederCoordinator) -> None:
+        """Initialize button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{self._mac}_feed"
+
+    async def async_press(self) -> None:
+        """Handle button press."""
+        _LOGGER.info("Feeding feeder %s", self._mac)
+        success = await self.coordinator.api.async_feed(self._mac)
+        if success:
+            await self.coordinator.async_request_refresh()
 
 
 class VsonFeederFeedLeftButton(VsonFeederBaseButton):
